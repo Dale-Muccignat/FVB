@@ -2,3 +2,15 @@ name = "FVB"
 uuid = "b9d2e702-8a96-4e43-9ef3-aad4b468edc3"
 authors = ["Dale-Muccignat <dale.muccignat@my.jcu.edu.au>"]
 version = "0.1.0"
+
+[deps]
+AndersonAcceleration = "cf7a8319-7422-45e1-9d9d-09d2f3292ef7"
+Gases = "2c68f703-1361-4b11-b625-5488bb42ec3f"
+LXCatParser = "9c4395cb-5d2b-4c39-ae19-55854566b138"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+LoopVectorization = "bdcacae8-1622-11e9-2a5c-532679323890"
+RSequences = "a0cff5f7-4399-4d78-90d8-99a93a19fb99"
+Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
+SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
+Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
+SuiteSparse = "4607b0f0-06f3-5cda-b6b1-a6196a1729e9"
