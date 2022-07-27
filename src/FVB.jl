@@ -142,9 +142,12 @@ function pt(gas;T,E,εmax=NaN,μ=NaN,lmax=1,N=200,superelastic=true,verbose=fals
     adjust_εmax = isnan(εmax)
     εmax::Float64 = adjust_εmax ? εguess : εmax
 
+    T_og = T
     TK, ETd = max(sqrt(eps()),T), max(sqrt(eps()),E)
     T = 1380649TK/16021766340 # T *= kB/e
     E = ETd/10 # E *= 1E-21/σ₀
+    Z_total = Z_T(gas.exlosses,T_og)
+    @show Z_total
 
     attempts = 0
     @label start
@@ -170,32 +173,43 @@ function pt(gas;T,E,εmax=NaN,μ=NaN,lmax=1,N=200,superelastic=true,verbose=fals
     Wb = Vector{Float64}(undef,N)
     Ab = Vector{Float64}(undef,N)
     Bb = Vector{Float64}(undef,N)
-    for i = 1:N
-        nuat, nuio = νₐₜ(gas,v[i]), νᵢₒ(gas,v[i])
-        #νₗₒₛₛ[i] = νₑₓ(gas,v[i]) + nuat + nuio
-        νₗₒₛₛ[i] = νₑₓ(gas,v[i]) + νₛᵤ(gas,v[i]) + nuat + nuio
-        νₜₒₜ[i] = νₘ(gas,v[i]) + νₗₒₛₛ[i]
-        νₙₑₜ[i] = nuio - nuat
-        #νₗₒₛₛb[i] = νₑₓ(gas,vb[i]) + νₐₜ(gas,vb[i]) + νᵢₒ(gas,vb[i])
-        νₗₒₛₛb[i] = νₑₓ(gas,vb[i]) + νₛᵤ(gas,vb[i]) + νₐₜ(gas,vb[i]) + νᵢₒ(gas,vb[i])
-        νₜₒₜb[i] = νₘ(gas,vb[i]) + νₗₒₛₛb[i]
-        z = 2(1/vb[i]-vb[i]/T)Δv
-        Wb[i] = z*νₑ(gas,vb[i])*T/4Δv
-        Ab[i] = -Wb[i]/expm1(-z)
-        Bb[i] = -Wb[i]/expm1(+z)
+    if superelastic
+        for i = 1:N
+            nuat, nuio = νₐₜ(gas,v[i]), νᵢₒ(gas,v[i])
+            #νₗₒₛₛ[i] = νₑₓ(gas,v[i],T_og) + nuat + nuio
+            νₗₒₛₛ[i] = νₑₓ(gas,v[i],T_og) + νₛᵤ(gas,v[i],T_og) + nuat + nuio
+            νₜₒₜ[i] = νₘ(gas,v[i]) + νₗₒₛₛ[i]
+            νₙₑₜ[i] = nuio - nuat
+            #νₗₒₛₛb[i] = νₑₓ(gas,vb[i],T_og) + νₐₜ(gas,vb[i]) + νᵢₒ(gas,vb[i])
+            νₗₒₛₛb[i] = νₑₓ(gas,vb[i],T_og) + νₛᵤ(gas,vb[i],T_og) + νₐₜ(gas,vb[i]) + νᵢₒ(gas,vb[i])
+            νₜₒₜb[i] = νₘ(gas,vb[i]) + νₗₒₛₛb[i]
+            z = 2(1/vb[i]-vb[i]/T)Δv
+            Wb[i] = z*νₑ(gas,vb[i])*T/4Δv
+            Ab[i] = -Wb[i]/expm1(-z)
+            Bb[i] = -Wb[i]/expm1(+z)
+        end
+        #for i = 1:N
+            #νₗₒₛₛ[i] += νₛᵤ(gas,v[i],T_og)
+            #νₗₒₛₛb[i] += νₛᵤ(gas,vb[i],T_og)
+        #end
+    else
+        for i = 1:N
+            nuat, nuio = νₐₜ(gas,v[i]), νᵢₒ(gas,v[i])
+            νₗₒₛₛ[i] = νₑₓ(gas,v[i],0) + nuat + nuio
+            νₜₒₜ[i] = νₘ(gas,v[i]) + νₗₒₛₛ[i]
+            νₙₑₜ[i] = nuio - nuat
+            νₗₒₛₛb[i] = νₑₓ(gas,vb[i],0) + νₐₜ(gas,vb[i]) + νᵢₒ(gas,vb[i])
+            νₜₒₜb[i] = νₘ(gas,vb[i]) + νₗₒₛₛb[i]
+            z = 2(1/vb[i]-vb[i]/T)Δv
+            Wb[i] = z*νₑ(gas,vb[i])*T/4Δv
+            Ab[i] = -Wb[i]/expm1(-z)
+            Bb[i] = -Wb[i]/expm1(+z)
+        end
     end
 
     νₜₒₜv = νₜₒₜ #gas.elastic === gas.viscosity ? νₜₒₜ : @. νᵥ(gas,v) + νₗₒₛₛ
     νₜₒₜvb = νₜₒₜb #gas.elastic === gas.viscosity ? νₜₒₜb : @. νᵥ(gas,vb) + νₗₒₛₛb
 
-    if superelastic
-         #TODO: Calculate the total partition function
-         #TODO: Weight by the exponential
-        for i = 1:N
-            νₗₒₛₛ[i] += νₛᵤ(gas,v[i])
-            νₗₒₛₛb[i] += νₛᵤ(gas,vb[i])
-        end
-    end
 
     siz = (3 + 5 + 10(lmax÷2))N
     for exloss in gas.exlosses if exloss < εmax
@@ -229,29 +243,17 @@ function pt(gas;T,E,εmax=NaN,μ=NaN,lmax=1,N=200,superelastic=true,verbose=fals
     c += 1; is[c] = N; js[c] = N-1; Ls[c] = Ab[N-1]/Δv
     c += 1; is[c] = N; js[c] = N; Ls[c] = -(νₗₒₛₛ[N] - Bb[N-1]/Δv)
 
-    # TODO: Add prefactor to individual cross-sections
     for k in eachindex(gas.excitation)
         νₑₓ, wₑₓ, εₖ = CollisionFrequency(gas.excitation[k]), gas.wₑₓ[k], gas.exlosses[k]
         for i = 1:N
             εshift = ε[i] + εₖ
             εshift >= εmax && break
             vshift = Base.sqrt_llvm(εshift)
-            prefactor = wₑₓ*v[i]/vshift*νₑₓ(vshift)
-            j = floor(Int,(vshift+Δv/2)/(vmax+Δv)*(N+1)) #searchsortedlast(v,vshift)
-            w = (vshift-v[j])/Δv
-            c += 1; is[c] = i; js[c] = j; Ls[c] = prefactor*(1-w)
-            j == N && break
-            c += 1; is[c] = i; js[c] = j+1; Ls[c] = prefactor*w
-        end
-    end
-
-    for k in eachindex(gas.excitation)
-        νₑₓ, wₑₓ, εₖ = CollisionFrequency(gas.excitation[k]), gas.wₑₓ[k], gas.exlosses[k]
-        for i = 1:N
-            εshift = ε[i] - εₖ
-            εshift >= εmax && break
-            vshift = Base.sqrt_llvm(εshift)
-            prefactor = wₑₓ*v[i]/vshift*νₛᵤ(vshift)
+            if superelastic
+                prefactor = wₑₓ*v[i]/vshift*νₑₓ(vshift)/Z_total
+            else
+                prefactor = wₑₓ*v[i]/vshift*νₑₓ(vshift)
+            end
             j = floor(Int,(vshift+Δv/2)/(vmax+Δv)*(N+1)) #searchsortedlast(v,vshift)
             w = (vshift-v[j])/Δv
             c += 1; is[c] = i; js[c] = j; Ls[c] = prefactor*(1-w)
@@ -262,14 +264,18 @@ function pt(gas;T,E,εmax=NaN,μ=NaN,lmax=1,N=200,superelastic=true,verbose=fals
 
     if superelastic
         for k in eachindex(gas.excitation)
-            νₑₓ, wₑₓ, εₖ, Z = CollisionFrequency(gas.excitation[k]), gas.wₑₓ[k], gas.exlosses[k], gas.partition[i]
+            νₑₓ, wₑₓ, εₖ = CollisionFrequencySuper(gas.excitation[k]), gas.wₑₓ[k], gas.exlosses[k]
+            Z_k = Z(εₖ,T_og)/Z_total
             for i = 1:N
                 εshift = ε[i] - εₖ
                 εshift <= 0 && continue
                 vshift = Base.sqrt_llvm(εshift)
-                prefactor = wₑₓ*ε[i]/εshift*Z*νₑₓ(v[i],superelastic=true)
+                prefactor = wₑₓ*v[i]/vshift*Z_k*νₑₓ(vshift,εₖ)
                 j = floor(Int,(vshift+Δv/2)/(vmax+Δv)*(N+1)) #searchsortedlast(v,vshift)
                 w = (vshift-v[j])/Δv
+                #c += 1; is[c] = i; js[c] = j; Ls[c] = prefactor*(1-w)
+                #j == N && break
+                #c += 1; is[c] = i; js[c] = j+1; Ls[c] = prefactor*w
                 c += 1; is[c] = i; js[c] = j+1; Ls[c] = prefactor*w
                 j == 0 && continue
                 c += 1; is[c] = i; js[c] = j; Ls[c] = prefactor*(1-w)
@@ -277,7 +283,24 @@ function pt(gas;T,E,εmax=NaN,μ=NaN,lmax=1,N=200,superelastic=true,verbose=fals
         end
     end
 
-    # All fractions equiprobable energy sharing
+    #if superelastic
+        #for k in eachindex(gas.excitation)
+            #νₑₓ, wₑₓ, εₖ = CollisionFrequencySuper(gas.excitation[k]), gas.wₑₓ[k], gas.exlosses[k]
+            #for i = 1:N
+                #εshift = ε[i] - εₖ
+                #εshift <= 0 && continue
+                #vshift = Base.sqrt_llvm(εshift)
+                #prefactor = wₑₓ*ε[i]/εshift*Z_k*νₑₓ(v[i],εₖ)/Z_total
+                #j = floor(Int,(vshift+Δv/2)/(vmax+Δv)*(N+1)) #searchsortedlast(v,vshift)
+                #w = (vshift-v[j])/Δv
+                #c += 1; is[c] = i; js[c] = j+1; Ls[c] = prefactor*w
+                #j == 0 && continue
+                #c += 1; is[c] = i; js[c] = j; Ls[c] = prefactor*(1-w)
+            #end
+        #end
+    #end
+
+    #All fractions equiprobable energy sharing
     for k in eachindex(gas.ionisation)
         νᵢₒ, wᵢₒ, εₖ = CollisionFrequency(gas.ionisation[k]), gas.wᵢₒ[k], gas.iolosses[k]
         for i = 1:N
@@ -724,7 +747,7 @@ function pt(gas;T,E,εmax=NaN,μ=NaN,lmax=1,N=200,superelastic=true,verbose=fals
     WKondo = W + 2*αη*DL
 
     kel = γ*σ₀*Δv*sum(νₘ(gas,v[i])*G[i] for i = 1:N)
-    kex = γ*σ₀*Δv*sum(νₑₓ(gas,v[i])*G[i] for i = 1:N)
+    kex = γ*σ₀*Δv*sum(νₑₓ(gas,v[i],T_og)*G[i] for i = 1:N)
     kio = γ*σ₀*Δv*sum(νᵢₒ(gas,v[i])*G[i] for i = 1:N)
     kat = γ*σ₀*Δv*sum(νₐₜ(gas,v[i])*G[i] for i = 1:N)
 
