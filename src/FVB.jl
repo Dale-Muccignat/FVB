@@ -133,7 +133,7 @@ function oracle(gas::Gas;E,T,lmax)
     return unscaleε(B[1]), unscaleω(B[2])
 end
 
-function pt(gas;T,E,εmax=NaN,μ=NaN,lmax=1,N=200,superelastic=true,verbose=false) @inbounds begin
+function pt(gas;T,E,εmax=NaN,μ=NaN,lmax=1,N=200,superelastic=false,verbose=false) @inbounds begin
     (iseven(lmax) || lmax < 1) && throw("lmax must be odd.")
 
     ifactor = 1 + (gas.species === :electron)
@@ -146,8 +146,9 @@ function pt(gas;T,E,εmax=NaN,μ=NaN,lmax=1,N=200,superelastic=true,verbose=fals
     TK, ETd = max(sqrt(eps()),T), max(sqrt(eps()),E)
     T = 1380649TK/16021766340 # T *= kB/e
     E = ETd/10 # E *= 1E-21/σ₀
-    Z_total = Z_T(gas.exlosses,T_og)
-    @show Z_total
+    if superelastic
+        Z_total = Z_T(gas.exlosses,T_og)
+    end
 
     attempts = 0
     @label start
@@ -195,10 +196,10 @@ function pt(gas;T,E,εmax=NaN,μ=NaN,lmax=1,N=200,superelastic=true,verbose=fals
     else
         for i = 1:N
             nuat, nuio = νₐₜ(gas,v[i]), νᵢₒ(gas,v[i])
-            νₗₒₛₛ[i] = νₑₓ(gas,v[i],0) + nuat + nuio
+            νₗₒₛₛ[i] = νₑₓ(gas,v[i]) + nuat + nuio
             νₜₒₜ[i] = νₘ(gas,v[i]) + νₗₒₛₛ[i]
             νₙₑₜ[i] = nuio - nuat
-            νₗₒₛₛb[i] = νₑₓ(gas,vb[i],0) + νₐₜ(gas,vb[i]) + νᵢₒ(gas,vb[i])
+            νₗₒₛₛb[i] = νₑₓ(gas,vb[i]) + νₐₜ(gas,vb[i]) + νᵢₒ(gas,vb[i])
             νₜₒₜb[i] = νₘ(gas,vb[i]) + νₗₒₛₛb[i]
             z = 2(1/vb[i]-vb[i]/T)Δv
             Wb[i] = z*νₑ(gas,vb[i])*T/4Δv
@@ -747,7 +748,12 @@ function pt(gas;T,E,εmax=NaN,μ=NaN,lmax=1,N=200,superelastic=true,verbose=fals
     WKondo = W + 2*αη*DL
 
     kel = γ*σ₀*Δv*sum(νₘ(gas,v[i])*G[i] for i = 1:N)
-    kex = γ*σ₀*Δv*sum(νₑₓ(gas,v[i],T_og)*G[i] for i = 1:N)
+    if superelastic
+        kex = γ*σ₀*Δv*sum(νₑₓ(gas,v[i],T_og)*G[i] for i = 1:N)
+    else
+        kex = γ*σ₀*Δv*sum(νₑₓ(gas,v[i])*G[i] for i = 1:N)
+    end
+
     kio = γ*σ₀*Δv*sum(νᵢₒ(gas,v[i])*G[i] for i = 1:N)
     kat = γ*σ₀*Δv*sum(νₐₜ(gas,v[i])*G[i] for i = 1:N)
 
