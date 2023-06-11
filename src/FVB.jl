@@ -936,7 +936,7 @@ function pt(gas;T,E,εmax=NaN,μ=NaN,lmax=1,N=200,superelastic=false,supertype=:
             kio,
             kat,
             iterations,
-            converged,)
+            converged,)::NamedTuple{(:v, :vb, :Δv, :G, :G₀, :G₁, :Gᵀ, :Gᴸ, :G²ᵀ, :G²ᴸ, :ω₀, :ω₁, :ω₂, :ω̄₂, :ε̄, :WF, :W, :DTF, :DLF, :DT, :DL, :εmax, :vmax, :Rnet, :αη, :αηF, :α, :η, :WBrambring, :αηBrambring, :DLBrambring, :μ, :μF, :μBrambring, :WKondo, :μKondo, :DLKondo, :kel, :kex, :kio, :kat, :iterations, :converged), Tuple{StepRangeLen{Float64, Base.TwicePrecision{Float64}, Base.TwicePrecision{Float64}, Int64}, StepRangeLen{Float64, Base.TwicePrecision{Float64}, Base.TwicePrecision{Float64}, Int64}, Float64, Vector{Float64}, SubArray{Float64, 1, Vector{Float64}, Tuple{UnitRange{Int64}}, true}, SubArray{Float64, 1, Vector{Float64}, Tuple{UnitRange{Int64}}, true}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Float64, Float64, Float64, Float64, Float64, Float64, Float64, Float64, Float64, Float64, Float64, Float64, Float64, Float64, Float64, Float64, Float64, Float64, Float64, Float64, Float64, Float64, Float64, Float64, Float64, Float64, Float64, Float64, Float64, Float64, Float64, Int64, Bool}}
 end end
 function pts(gas,Ens;hard_error=false,kws...)
     stop_flag = Atomic{Bool}(false)
