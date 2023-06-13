@@ -1,7 +1,7 @@
 name = "FVB"
 uuid = "b9d2e702-8a96-4e43-9ef3-aad4b468edc3"
 authors = ["Dale-Muccignat <dale.muccignat@my.jcu.edu.au>"]
-version = "0.2.1"
+version = "0.2.2"
 
 [deps]
 AndersonAcceleration = "cf7a8319-7422-45e1-9d9d-09d2f3292ef7"
