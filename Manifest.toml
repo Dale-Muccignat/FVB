@@ -14,7 +14,7 @@ weakdeps = ["StaticArrays"]
 deps = ["LinearAlgebra", "LoopVectorization"]
 path = "../AndersonAcceleration"
 uuid = "cf7a8319-7422-45e1-9d9d-09d2f3292ef7"
-version = "0.1.0"
+version = "0.2.0"
 
 [[ArgTools]]
 uuid = "0dad84c5-d112-42e6-8d28-ef12dabb789f"
@@ -369,9 +369,9 @@ version = "0.1.14"
 
 [[HypergeometricFunctions]]
 deps = ["DualNumbers", "LinearAlgebra", "OpenLibm_jll", "SpecialFunctions"]
-git-tree-sha1 = "84204eae2dd237500835990bcade263e27674a93"
+git-tree-sha1 = "0ec02c648befc2f94156eaef13b0f38106212f3f"
 uuid = "34004b35-14d8-5ef3-9330-4cdb6864b03a"
-version = "0.3.16"
+version = "0.3.17"
 
 [[IfElse]]
 git-tree-sha1 = "debdd00ffef04665ccbb3e150747a77560e8fad1"
@@ -791,7 +791,7 @@ uuid = "3fa0cd96-eef1-5676-8a61-b3b8758bbffb"
 [[RSequences]]
 path = "../RSequences"
 uuid = "a0cff5f7-4399-4d78-90d8-99a93a19fb99"
-version = "0.1.0"
+version = "0.2.0"
 
 [[Random]]
 deps = ["SHA", "Serialization"]
@@ -799,9 +799,9 @@ uuid = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 
 [[Ratios]]
 deps = ["Requires"]
-git-tree-sha1 = "6d7bb727e76147ba18eed998700998e17b8e4911"
+git-tree-sha1 = "1342a47bf3260ee108163042310d26f2be5ec90b"
 uuid = "c84ed2f1-dad5-54f0-aa8e-dbefe2724439"
-version = "0.4.4"
+version = "0.4.5"
 weakdeps = ["FixedPointNumbers"]
 
     [Ratios.extensions]
@@ -935,9 +935,9 @@ weakdeps = ["OffsetArrays", "StaticArrays"]
 
 [[StaticArrays]]
 deps = ["LinearAlgebra", "Random", "StaticArraysCore", "Statistics"]
-git-tree-sha1 = "8982b3607a212b070a5e46eea83eb62b4744ae12"
+git-tree-sha1 = "832afbae2a45b4ae7e831f86965469a24d1d8a83"
 uuid = "90137ffa-7385-5640-81b9-e52037218182"
-version = "1.5.25"
+version = "1.5.26"
 
 [[StaticArraysCore]]
 git-tree-sha1 = "6b7ba252635a5eff6a0b0664a41ee140a1c9e72a"
